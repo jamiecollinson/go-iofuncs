@@ -4,14 +4,12 @@ import (
 	"io"
 )
 
-// mockConnection is a mock for an io.ReadWriteCloser
-type mockConnection struct {
-	input  []byte
-	output []byte
-	closed bool
+// mockReader mocks io.Reader
+type mockReader struct {
+	input []byte
 }
 
-func (c *mockConnection) Read(p []byte) (n int, err error) {
+func (c *mockReader) Read(p []byte) (n int, err error) {
 	n = copy(p, c.input)
 	c.input = c.input[n:]
 	if len(c.input) == 0 {
@@ -20,14 +18,45 @@ func (c *mockConnection) Read(p []byte) (n int, err error) {
 	return
 }
 
-func (c *mockConnection) Write(p []byte) (n int, err error) {
+func (c *mockReader) setInput(s string) { c.input = []byte(s) }
+
+func createMockReader() *mockReader {
+	return &mockReader{}
+}
+
+// mockWriter mocks io.Writer
+type mockWriter struct {
+	output []byte
+}
+
+func (c *mockWriter) Write(p []byte) (n int, err error) {
 	c.output = p
 	return len(p), nil
 }
 
-func (c *mockConnection) Close() error {
+func createMockWriter() *mockWriter {
+	return &mockWriter{}
+}
+
+// mockCloser mocks io.Closer
+type mockCloser struct {
+	closed bool
+}
+
+func (c *mockCloser) Close() (err error) {
 	c.closed = true
-	return nil
+	return
+}
+
+func createMockCloser() *mockCloser {
+	return &mockCloser{}
+}
+
+// mockConnection is a mock for an io.ReadWriteCloser
+type mockConnection struct {
+	mockReader
+	mockWriter
+	mockCloser
 }
 
 func createMockConnection() *mockConnection {
